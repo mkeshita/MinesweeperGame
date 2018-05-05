@@ -4,7 +4,7 @@
 bool clickedOnMine(false);//Boolean flag to tell if a mine has been clicked on.
 bool won(false);//Boolean flag to tell if the player has won.
 
-				//Arrays are made global to prevent stack overflow, and make them easier to use with functions.
+//Arrays are made global to prevent stack overflow, and make them easier to use with functions.
 int grid[50][50];
 char visible[50][50];
 
@@ -152,6 +152,7 @@ void readyScoreboard(vector <player> &topPlayers)
 //Game functions
 void initVisibleToHash(int height, int width)
 {
+	won = false;
 	//A function that initialises that visible grid to the character '#'
 	for (int i = 1; i <= height; i++)
 		for (int j = 1; j <= width; j++)
@@ -236,6 +237,10 @@ void randomiseMineCoordinates(set < pair<int, int> > &minesCoordinates,
 	int numOfMines, int height, int width)
 {
 	//A function that randomises the coordinates for the mines.
+
+	//clear every time, to solve bug number 
+	minesCoordinates.clear();
+	srand(time(NULL));
 	while (mineSetSize < numOfMines)
 	{
 		int y = rand() % height + 1;
@@ -275,6 +280,7 @@ void setValuesForGrid(int height, int width)
 void placeMines(set < pair<int, int> > &minesCoordinates)
 {
 	//A function that places the mines
+	memset(grid, 0, sizeof(grid));
 	for (set<pair<int, int> >::iterator it = minesCoordinates.begin(); it != minesCoordinates.end(); it++)
 		grid[it->first][it->second] = Mines_Flag;
 }
@@ -355,11 +361,11 @@ void clickTile(int height, int width, int y, int x, char operation)
 			clickedOnMine = true;
 		}
 
-		else if (visible[y][x] == 'F')
-			visible[y][x] = '#';
+		/*else if (visible[y][x] == 'F')
+		visible[y][x] = '#';
 
 		else if (visible[y][x] == '?')
-			visible[y][x] = '#';
+		visible[y][x] = '#';*/
 
 		else
 			openTiles(y, x, height, width);
@@ -372,12 +378,21 @@ void clickTile(int height, int width, int y, int x, char operation)
 		if (visible[y][x] == '#')
 			visible[y][x] = 'F';
 
+		else if (visible[y][x] == 'F')
+			visible[y][x] = '?';
+
+		else if (visible[y][x] == '?')
+			visible[y][x] = '#';
+
 		printVisible(height, width);
 	}
 	else if (operation == '?')
 	{
 		if (visible[y][x] == '#')
 			visible[y][x] = '?';
+
+		else if (visible[y][x] == '?')
+			visible[y][x] = '#';
 
 		printVisible(height, width);
 	}
@@ -426,63 +441,18 @@ char endGame(int height, int width, int numOfMines)
 
 }
 
-void getVisiable(char arr[50][50]) 
+void getVisiable(char arr[50][50])
 {
 	for (int i = 0; i < 50; i++)
 		for (int j = 0; j < 50; j++)
 			arr[i][j] = visible[i][j];
 }
 
-/*
-void playGame(int height, int width, int numOfMines, struct player mainPlayer, vector <player> &topPlayers)
+bool getClickedONMine()
 {
-	auto start = steady_clock::now(); //Sets a start for counting time.
-
-	cout << "Enter tile address and then the command(?,F,O): ";
-
-	//Playing the game!
-	do
-	{
-		clickTile(height, width);
-	} while (endGame(height, width, numOfMines) == 'N');
-
-	auto end = steady_clock::now(); //Sets an end for counting time.
-
-	auto tMilliseconds = duration_cast <milliseconds> (end - start).count(); //Counting milliseconds
-
-																			 //Calculating Minutes and Seconds.
-	long long  tSeconds = tMilliseconds / 1000;
-	long long  tMinutes = tSeconds / 60;
-	tSeconds %= 60;
-
-	//Assigning the values to the player's info in the struct.
-	mainPlayer.milliSeconds = tMilliseconds;
-	mainPlayer.minutes = tMinutes;
-	mainPlayer.seconds = tSeconds;
-
-	readyScoreboard(topPlayers);
-	int check = checkPlayerScore(mainPlayer, topPlayers);
-
-
-
-	if (tMinutes > 0) //Condition that makes sure to print the minutes only if they are larger than 0.
-	{
-		cout << "The game took " << tMinutes << " minutes, and "
-			<< tSeconds << " seconds." << endl;
-	}
-
-	else
-	{
-		cout << "The game took " << tSeconds << " seconds." << endl;
-	}
-
-	if (won)
-	{
-		if (check > -1)
-			cout << "New highscore! You are no #" << check + 1 << " on the scoreboard!" << endl;
-
-		printScoreboard(topPlayers);
-		writeScoreboard(topPlayers);
-	}
+	return clickedOnMine;
 }
-*/
+bool getWin()
+{
+	return won;
+}

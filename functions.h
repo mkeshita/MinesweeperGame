@@ -79,6 +79,8 @@ void clickTile(int height, int width, int y, int x, char operation);
 void getVisiable(char arr[50][50]);
 char endGame(int height, int width, int numOfMines);
 void playGame(int height, int width, int numOfMines, struct player mainPlayer, vector <player> &topPlayers);
+bool getClickedONMine();
+bool getWin();
 
 
 
