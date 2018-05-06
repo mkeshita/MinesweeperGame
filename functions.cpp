@@ -1,6 +1,5 @@
 #include "functions.h"
 
-
 bool clickedOnMine(false);//Boolean flag to tell if a mine has been clicked on.
 bool won(false);//Boolean flag to tell if the player has won.
 
@@ -50,101 +49,42 @@ void readScoreboard(vector <player> &topPlayers)
 		topPlayers[i].milliSeconds = milliSeconds;
 
 		topPlayers[i].seconds = milliSeconds / 1000;
-		topPlayers[i].minutes = topPlayers[i].seconds / 60; ;
 		topPlayers[i].seconds %= 60;
 	}
 	scoreboardI.close();
 }
 
-void printScoreboard(vector <player> &topPlayers)
-{
-	//A function that prints the scoreboard to the player.
-	int width = 4, width2 = 30;
-	cout << "\t\t" << "Name" << setw(27) << "Minutes |" << "\t" << "Seconds" << endl;
-	charline(47, '-', 'N');
-
-	for (int i = 0; i < 10; i++)
-	{
-		if (i == 9) width = 3;
-
-		if (topPlayers[i].milliSeconds != genericScoreNum)
-			cout << i + 1 << setw(width) << " - " << topPlayers[i].name <<
-			setw(width2 - topPlayers[i].name.size()) <<
-			topPlayers[i].minutes << "\t\t\t" << topPlayers[i].seconds << endl;
-
-		else cout << i + 1 << setw(width) << " - " << topPlayers[i].name <<
-			setw(width2 - topPlayers[i].name.size()) <<
-			"N/A" << "\t\t\t" << "N/A" << endl;
-	}
-
-}
-
 void writeScoreboard(vector <player> &topPlayers)
 {
 	//A function that writes the scoreboard to the scoreboard.scrb file.
+	sortScoreboard(topPlayers);
 	int width = 30; //For formatting only
 	ofstream scoreboardO;
 	scoreboardO.open("scoreboard.scrb");
 	for (int i = 0; i < 10; i++)
 	{
 		scoreboardO << topPlayers[i].name << "*" <<
-			setw(width - (int)topPlayers[i].name.size()) <<
-			topPlayers[i].milliSeconds << endl;
+						setw(width - (int)topPlayers[i].name.size()) <<
+						topPlayers[i].milliSeconds << endl;
 	}
 	scoreboardO.close();
 }
 
-void swapStructs(struct player* first, struct player* second)
+bool compareMilliseconds(player a, player b)
 {
-	//A function that swaps 2 structs using pointers.
-	player temp;
-	temp = *first;
-	*first = *second;
-	*second = temp;
+	return (bool)(a.milliSeconds < b.milliSeconds);
 }
 
 void sortScoreboard(vector <player> &topPlayers)
 {
-	//A function that sorts the scoreboard in decreasing order.
-	for (int i = 0; i < 10; i++)
-	{
-		for (int j = 0; j < 9; j++)
-		{
-			if (topPlayers[j].milliSeconds > topPlayers[j + 1].milliSeconds)
-			{
-				swapStructs(&topPlayers[j], &topPlayers[j + 1]);
-			}
-		}
-	}
-}
-
-int checkPlayerScore(struct player mainPlayer, vector <player> &topPlayers)
-{
-	// A function that checks if the player should enter the scoreboard, if so
-	//it returns the index that they should stand in.
-
-	int index(-1);
-	for (int i = 0; i < 10; i++)
-		if (mainPlayer.milliSeconds < topPlayers[i].milliSeconds)
-		{
-			index = i;
-			vector <player>::iterator it;
-			it = topPlayers.begin() + index;
-
-			topPlayers.insert(it, mainPlayer);
-			topPlayers.pop_back();
-			return index;
-		}
-	return index; //returns -1 by default
+	sort(topPlayers.begin(), topPlayers.end(), compareMilliseconds);
 }
 
 void readyScoreboard(vector <player> &topPlayers)
 {
-	//A function that initialises the vector, reads the scoreboard, sorts the scoreboard,
-	// and then writes the scoreboard again to the file.
+	//A function that initialises the vector, reads the scoreboard
 	initialiseVector(topPlayers);
 	readScoreboard(topPlayers);
-	sortScoreboard(topPlayers);
 	writeScoreboard(topPlayers);
 }
 
@@ -159,86 +99,12 @@ void initVisibleToHash(int height, int width)
 			visible[i][j] = '#';
 }
 
-void chooseDifficulty(char c, int &height, int &width, int &numOfMines)
-{
-	//A function that initialises the grid size and number of mines based on the difficulty
-	//chosen by the player.
-	switch (c)
-	{
-	case 'E':height = 8, width = 8, numOfMines = 10; break; //Easy case
-
-	case 'M':height = 10, width = 10, numOfMines = 20; break; //Medium case
-
-	case 'H':height = 15, width = 15, numOfMines = 45; break; //Hard case
-
-	case 'B':height = 20, width = 20, numOfMines = 80; break; //Brutal case
-
-	case 'C':
-	{
-		cout << "Enter grid size (height * width), and # of mines: ";
-		cin >> height >> width >> numOfMines;
-		break;
-	}  //Custom case
-
-	default: cout << "Error!" << endl;
-	}
-
-
-}
-
-void initialiseGame(int &height, int &width, int &numOfMines, vector <player> &topPlayers, struct player &mainPlayer)
-{
-	//A function that passes the height, width and the number of mines in the grid, as well as the user's name
-	//by passing them by reference.
-
-	cout << setw(15) << "Welcome to Minesweeper!" << endl;
-
-	while (true)
-	{
-		cout << "Enter 'P' to play, 'S' to see the scoreboard, 'R' to reset the scoreboard: ";
-		char choice;
-		cin >> choice;
-		if (choice == 'P')
-		{
-			cout << "Enter your name: ";
-
-			cin.ignore();
-
-			string name;
-			getline(cin, name);
-
-			mainPlayer.name = name;
-
-			cout << setw(0) << "Enter the difficulty you want to play (E, M, H, B, C): ";
-			char diff;
-			cin >> diff;
-			chooseDifficulty(diff, height, width, numOfMines);
-
-			break;
-		}
-
-		else if (choice == 'S')
-		{
-			readyScoreboard(topPlayers);
-			printScoreboard(topPlayers);
-		}
-
-		else if (choice == 'R')
-		{
-			topPlayers.clear();
-
-			initialiseVector(topPlayers);
-			writeScoreboard(topPlayers);
-		}
-	}
-}
-
 void randomiseMineCoordinates(set < pair<int, int> > &minesCoordinates,
-	int numOfMines, int height, int width)
+										int numOfMines, int height, int width)
 {
 	//A function that randomises the coordinates for the mines.
 
-	//clear every time, to solve bug number 
+	//clear every time, to solve bug number
 	minesCoordinates.clear();
 	srand(time(NULL));
 	while (mineSetSize < numOfMines)
@@ -312,7 +178,7 @@ void printVisible(int height, int width)
 	for (int i = 1; i <= height; i++)
 	{
 		cout << (char)(i + 64) << " | "; // Printing out a character and a pipe from the side guide
-										 //before printing the row itself
+		//before printing the row itself
 		for (int j = 1; j <= width; j++)
 		{
 			cout << visible[i][j] << ' ';
@@ -361,11 +227,10 @@ void clickTile(int height, int width, int y, int x, char operation)
 			clickedOnMine = true;
 		}
 
-		/*else if (visible[y][x] == 'F')
-		visible[y][x] = '#';
-
-		else if (visible[y][x] == '?')
-		visible[y][x] = '#';*/
+			/*else if (visible[y][x] == 'F')
+			visible[y][x] = '#';
+			else if (visible[y][x] == '?')
+			visible[y][x] = '#';*/
 
 		else
 			openTiles(y, x, height, width);
@@ -417,15 +282,17 @@ char endGame(int height, int width, int numOfMines)
 	for (int i = 1; i <= height; i++)
 		for (int j = 1; j <= width; j++)
 		{
-			if (grid[i][j] != Mines_Flag && visible[i][j] == '#')
+			if ((grid[i][j] != Mines_Flag && visible[i][j] == '#') || (visible[i][j] == 'F' && grid[i][j] != Mines_Flag))
 				emptyAreVisible = false;
 		}
 
 
 	cout << "Number of flags placed:" << flagCntr << endl;
-	if (cntr == numOfMines && flagCntr == numOfMines || emptyAreVisible)
+	bool nFlagsCheck = (cntr == numOfMines && flagCntr == numOfMines);
+	if (nFlagsCheck || emptyAreVisible)
 	{
 		cout << "Congratulations, you win!" << endl;
+		//	cout << emptyAreVisible << ' ' << nFlagsCheck << endl;
 		won = true;
 		return 'W'; // Returns W (for win) if the user puts flags on all of the mines
 	}
@@ -441,7 +308,7 @@ char endGame(int height, int width, int numOfMines)
 
 }
 
-void getVisiable(char arr[50][50])
+void getVisible(char arr[50][50])
 {
 	for (int i = 0; i < 50; i++)
 		for (int j = 0; j < 50; j++)
@@ -452,6 +319,7 @@ bool getClickedONMine()
 {
 	return clickedOnMine;
 }
+
 bool getWin()
 {
 	return won;
